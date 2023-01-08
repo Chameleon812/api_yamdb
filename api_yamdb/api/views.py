@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, filters, mixins
 
-from .serializers import CommentSerializer, ReviewSerializer
-from reviews.models import Review, Title
+from .serializers import CommentSerializer, ReviewSerializer, CategorySerializer
+from reviews.models import Review, Title, Category
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -35,3 +35,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
             Title,
             id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
+
+
+class ListCreateDeleteViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(ListCreateDeleteViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
