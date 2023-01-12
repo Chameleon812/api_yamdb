@@ -6,8 +6,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Review, Title, Category, User
-from .serializers import CommentSerializer, ReviewSerializer, CategorySerializer, SignUpSerializer, TokenSerializer
+from .serializers import (CommentSerializer, ReviewSerializer,
+                          CategorySerializer, GenreSerializer,
+                          SignUpSerializer, TokenSerializer)
+from reviews.models import Review, Title, Category, Genre, User
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -43,13 +45,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class ListCreateDeleteViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
-                              mixins.DestroyModelMixin, viewsets.GenericViewSet):
+                              mixins.DestroyModelMixin,
+                              viewsets.GenericViewSet):
     pass
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+
+class GenreViewSet(ListCreateDeleteViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
