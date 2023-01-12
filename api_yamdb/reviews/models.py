@@ -11,6 +11,7 @@ class User(AbstractUser):
     )
     bio = models.TextField('Биография', blank=True)
     email = models.EmailField('Электронная почта', unique=True)
+    confirmation_code = models.CharField(max_length=120, default='000000')
 
 
 class Category(models.Model):
