@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from reviews.models import Review, Comment, Category, User, Genre
+from reviews.models import (Review, Comment, Category, User, 
+                            Genre, Title, Genre_Title)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -96,6 +97,7 @@ class SignUpSerializer(serializers.Serializer):
     def validate_email(self, email):
         return UserSerializer.validate_email(self, email)
 
+
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
     confirmation_code = serializers.CharField()
@@ -104,3 +106,24 @@ class TokenSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'confirmation_code')
 
+
+class TitleSafeSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+    def get_rating(self, obj):
+        return 10
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')

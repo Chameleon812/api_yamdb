@@ -8,7 +8,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
-                          SignUpSerializer, TokenSerializer)
+                          SignUpSerializer, TokenSerializer,
+                          TitleSerializer, TitleSafeSerializer)
 from reviews.models import Review, Title, Category, Genre, User
 
 
@@ -55,7 +56,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
+    lookup_field = 'slug'
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -63,6 +64,19 @@ class GenreViewSet(ListCreateDeleteViewSet):
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('category', 'genre', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve') :
+            return TitleSafeSerializer
+        return TitleSerializer
 
 
 @api_view(['POST'])
