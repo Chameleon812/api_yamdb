@@ -1,6 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from rest_framework import viewsets, filters, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -8,7 +9,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
-                          SignUpSerializer, TokenSerializer)
+                          SignUpSerializer, TokenSerializer,
+                          TitleSerializer, TitleSafeSerializer)
 from reviews.models import Review, Title, Category, Genre, User
 
 
@@ -55,7 +57,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
+    lookup_field = 'slug'
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -63,6 +65,20 @@ class GenreViewSet(ListCreateDeleteViewSet):
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('id')
+    serializer_class = TitleSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('category', 'genre', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve') :
+            return TitleSafeSerializer
+        return TitleSerializer
 
 
 @api_view(['POST'])
