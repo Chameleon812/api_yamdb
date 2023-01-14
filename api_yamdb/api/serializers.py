@@ -108,16 +108,13 @@ class TokenSerializer(serializers.ModelSerializer):
 
 
 class TitleSafeSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
-
-    def get_rating(self, obj):
-        return 10
 
 
 class TitleSerializer(serializers.ModelSerializer):
