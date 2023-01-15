@@ -5,12 +5,15 @@ from django.db.models import Avg
 from rest_framework import viewsets, filters, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
                           SignUpSerializer, TokenSerializer,
-                          TitleSerializer, TitleSafeSerializer)
+                          TitleSerializer, TitleSafeSerializer,
+                          UserSerializer,
+                          )
 from reviews.models import Review, Title, Category, Genre, User
 
 
@@ -79,6 +82,33 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve') :
             return TitleSafeSerializer
         return TitleSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    search_fields = ('username',)
+
+
+    @action(
+        ['GET', 'PATCH'],
+        detail=False, url_path='me'
+    )
+    def me_user(self, request):
+        if not request.data:
+            serializer = self.serializer_class(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.serializer_class(
+            request.user, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        if request.user.role == 'admin':
+            serializer.update(request.user, serializer.validated_data)
+        else:
+            serializer.nonadmin_update(
+                request.user, serializer.validated_data
+            )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
