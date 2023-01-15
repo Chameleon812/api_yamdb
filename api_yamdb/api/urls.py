@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 
-from api.views import (CategoryViewSet, GenreViewSet, TitleViewSet,
+from api.views import (CategoryViewSet, GenreViewSet, TitleViewSet, UserViewSet,
                        signup, get_token)
 
 app_name = 'api'
@@ -10,6 +10,7 @@ router = SimpleRouter()
 router.register('categories', CategoryViewSet)
 router.register('genres', GenreViewSet)
 router.register('titles', TitleViewSet)
+router.register('users', UserViewSet)
 
 authentication_urls = [
     path('signup/',signup, name='signup'),
