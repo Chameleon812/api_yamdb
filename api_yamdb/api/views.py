@@ -1,3 +1,4 @@
+import django_filters
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -15,6 +16,7 @@ from .serializers import (CommentSerializer, ReviewSerializer,
                           UserSerializer,
                           )
 from reviews.models import Review, Title, Category, Genre, User
+from api.permissions import IsAdminOrReadOnly
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -61,6 +63,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -69,24 +72,38 @@ class GenreViewSet(ListCreateDeleteViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+
+
+class TitleFilter(django_filters.FilterSet):
+    category = django_filters.CharFilter(field_name='category__slug',
+                                         lookup_expr='icontains')
+    genre = django_filters.CharFilter(field_name='genre__slug',
+                                      lookup_expr='icontains')
+
+    class Meta:
+        model = Title
+        fields = ['category', 'genre', 'name', 'year']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')).order_by('id')
     serializer_class = TitleSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
+#    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve') :
             return TitleSafeSerializer
         return TitleSerializer
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
 

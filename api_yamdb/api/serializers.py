@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from rest_framework import serializers
 
 from reviews.models import (Review, Comment, Category, User, 
-                            Genre, Title, Genre_Title)
+                            Genre, Title)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -89,7 +91,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
-    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
 
     def validate_username(self, username):
         return UserSerializer.validate_username(self, username)
@@ -99,7 +102,8 @@ class SignUpSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
     confirmation_code = serializers.CharField()
 
     class Meta:
@@ -108,19 +112,28 @@ class TokenSerializer(serializers.ModelSerializer):
 
 
 class TitleSafeSerializer(serializers.ModelSerializer):
-    rating = serializers.IntegerField
+    rating = serializers.IntegerField(read_only=True)
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=Genre.objects.all())
-    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug', queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all())
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+
+    def validate_year(self, value):
+        if value > datetime.now().year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего!')
+        return value
