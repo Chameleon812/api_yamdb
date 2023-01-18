@@ -3,20 +3,23 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import permission_classes
+from rest_framework.decorators import action
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
                           SignUpSerializer, TokenSerializer,
                           TitleSerializer, TitleSafeSerializer,
-                          UserSerializer,
+                          UserSerializer, UserMeSerializer,
                           )
 from reviews.models import Review, Title, Category, Genre, User
-from api.permissions import IsAdminOrReadOnly
+from api.permissions import IsAdminOrReadOnly, IsAdmin
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -94,48 +97,20 @@ class TitleViewSet(viewsets.ModelViewSet):
 #    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve') :
+        if self.action in ('list', 'retrieve'):
             return TitleSafeSerializer
         return TitleSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'username'
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
-
-
-    @action(
-        ['GET', 'PATCH'],
-        detail=False, url_path='me'
-    )
-    def me_user(self, request):
-        if not request.data:
-            serializer = self.serializer_class(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = self.serializer_class(
-            request.user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        if request.user.role == 'admin':
-            serializer.update(request.user, serializer.validated_data)
-        else:
-            serializer.nonadmin_update(
-                request.user, serializer.validated_data
-            )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 @api_view(['POST'])
+@permission_classes([AllowAny, ])
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data.get('email')
     username = serializer.validated_data.get('username')
     try:
-        user, lastlog = User.objects.get_or_create(
+        user, _ = User.objects.get_or_create(
             username=username,
             email=email,
         )
@@ -148,7 +123,10 @@ def signup(request):
     User.objects.filter(username=username).update(
         confirmation_code=confirmation_code
     )
-    send_mail('Регистрация', f'Ваш код подтверждения: {confirmation_code}', 'admin', [email])
+    send_mail(
+        'Регистрация', f'Ваш код подтверждения: {confirmation_code}',
+        'admin', [email]
+    )
     return Response(
         request.data,
         status=status.HTTP_200_OK
@@ -156,6 +134,7 @@ def signup(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny, ])
 def get_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -175,3 +154,33 @@ def get_token(request):
     return Response(
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    lookup_field = 'username'
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('username',)
+    permission_classes = [IsAdmin]
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        url_path='me',
+        permission_classes=[IsAuthenticated]
+    )
+    def me_page(self, request):
+        if request.method == 'GET':
+            serializer = UserMeSerializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        if request.method == 'PATCH':
+            serializer = UserMeSerializer(
+                request.user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save(role=request.user.role)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
