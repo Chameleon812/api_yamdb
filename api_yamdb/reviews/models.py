@@ -11,7 +11,7 @@ class User(AbstractUser):
     )
     bio = models.TextField('Биография', blank=True)
     email = models.EmailField('Электронная почта', unique=True)
-    confirmation_code = models.CharField(max_length=120, default='000000')
+    confirmation_code = models.CharField(max_length=120, default='')
 
 
 class Category(models.Model):
@@ -87,7 +87,7 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         'Рейтинг', blank=True, null=True
-     )
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )

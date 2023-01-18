@@ -2,8 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
-from reviews.models import (Review, Comment, Category, User, 
-                            Genre, Title)
+from reviews.models import (Review, Comment, Category, User, Genre, Title)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -15,7 +14,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
-       
+
     class Meta:
         fields = '__all__'
         model = Review
@@ -50,6 +49,24 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
+class UserMeSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
+    email = serializers.CharField(max_length=254)
+    last_name = serializers.CharField(max_length=150)
+
+    class Meta:
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+
+        )
+        model = User
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
     email = serializers.CharField(max_length=254)
@@ -57,10 +74,14 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'username',
-            'email'
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+
         )
         model = User
-
 
     def validate_username(self, username):
         unique_test = User.objects.filter(
@@ -77,7 +98,6 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return username
 
-
     def validate_email(self, email):
         unique_email = User.objects.filter(
             email=email
@@ -89,16 +109,35 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
 
-class SignUpSerializer(serializers.Serializer):
+class SignUpSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z', max_length=150, required=True)
+        regex=r'^[\w.@+-]+\Z', max_length=150, required=True
+    )
 
-    def validate_username(self, username):
-        return UserSerializer.validate_username(self, username)
+    def validate(self, data):
+        email = data.get('email')
+        username = data.get('username')
 
-    def validate_email(self, email):
-        return UserSerializer.validate_email(self, email)
+        if data.get('username') == 'me':
+            raise serializers.ValidationError(
+                'username запрещен'
+            )
+        if User.objects.filter(email=email, username=username).exists():
+            return data
+        if User.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if User.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return data
+
+    class Meta:
+        model = User
+        fields = ('username', 'email')
 
 
 class TokenSerializer(serializers.ModelSerializer):
