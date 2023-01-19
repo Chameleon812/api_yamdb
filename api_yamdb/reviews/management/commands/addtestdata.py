@@ -78,9 +78,8 @@ class Command(BaseCommand):
             with open(f'static/data/{csv_table_list[1]}',
                       encoding='utf-8') as file:
 
-                self.stdout.write(self.style.NOTICE(
-                        f'Идет добавление данных в таблицу {table_name}...'
-                        ))
+                self.stdout.write(self.style.NOTICE('Идет добавление данных в '
+                                                    f'таблицу {table_name}..'))
 
                 reader = csv.DictReader(file, delimiter=',')
 
@@ -89,11 +88,9 @@ class Command(BaseCommand):
                 for row in reader:
                     self.stdout.write(" ".join(row.values()))
                     csv_table_list[0](
-                        **self.__get_kwargs_table(table_name, row)
-                        ).save()
+                        **self.__get_kwargs_table(table_name, row)).save()
 
             self.stdout.write(self.style.SUCCESS(
-                f'В таблицу {table_name} успешно добавлены данные!'
-                ))
+                f'В таблицу {table_name} успешно добавлены данные!'))
 
             self.stdout.write()

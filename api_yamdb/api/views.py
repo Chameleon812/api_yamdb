@@ -19,7 +19,8 @@ from .serializers import (CommentSerializer, ReviewSerializer,
                           UserSerializer, UserMeSerializer,
                           )
 from reviews.models import Review, Title, Category, Genre, User, Comment
-from api.permissions import IsAdminOrReadOnly, IsAdmin, IsAdminOrModeratorOrAuthor
+from api.permissions import (IsAdminOrReadOnly, IsAdmin,
+                             IsAdminOrModeratorOrAuthor)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
