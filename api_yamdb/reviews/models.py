@@ -13,6 +13,9 @@ class User(AbstractUser):
     email = models.EmailField('Электронная почта', unique=True)
     confirmation_code = models.CharField(max_length=120, default='')
 
+    class Meta:
+        ordering = ['username']
+
 
 class Category(models.Model):
     name = models.CharField('Название', unique=True, max_length=100)
@@ -21,6 +24,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -33,6 +37,7 @@ class Genre(models.Model):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+        ordering = ['name']
 
     def __str__(self):
         return self.name

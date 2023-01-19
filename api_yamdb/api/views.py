@@ -94,7 +94,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         rating=Avg('reviews__score')).order_by('id')
     serializer_class = TitleSerializer
     filterset_class = TitleFilter
-#    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
