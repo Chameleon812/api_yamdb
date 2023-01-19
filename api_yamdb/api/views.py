@@ -18,40 +18,35 @@ from .serializers import (CommentSerializer, ReviewSerializer,
                           TitleSerializer, TitleSafeSerializer,
                           UserSerializer, UserMeSerializer,
                           )
-from reviews.models import Review, Title, Category, Genre, User
-from api.permissions import IsAdminOrReadOnly, IsAdmin
-
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-
-    def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'))
-        return review.comments.all()
-
-    def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'))
-        serializer.save(author=self.request.user, review=review)
+from reviews.models import Review, Title, Category, Genre, User, Comment
+from api.permissions import IsAdminOrReadOnly, IsAdmin, IsAdminOrModeratorOrAuthor
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = (IsAdminOrModeratorOrAuthor,)
+
+    def title_query(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        return Review.objects.filter(title=self.title_query().id)
 
     def perform_create(self, serializer):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title=self.title_query())
+
+
+class CommentViewSet(ReviewViewSet):
+    serializer_class = CommentSerializer
+
+    def review_query(self):
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        return Comment.objects.filter(review=self.review_query().id)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.review_query())
 
 
 class ListCreateDeleteViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,

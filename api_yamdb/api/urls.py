@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 
 from api.views import (CategoryViewSet, GenreViewSet, TitleViewSet,
-                       UserViewSet, signup, get_token)
+                       UserViewSet, ReviewViewSet, CommentViewSet, 
+                       signup, get_token)
 
 app_name = 'api'
 
@@ -11,6 +12,16 @@ router.register('categories', CategoryViewSet)
 router.register('genres', GenreViewSet)
 router.register('titles', TitleViewSet)
 router.register('users', UserViewSet)
+router.register(
+    r"titles/(?P<title_id>\d+)/reviews",
+    ReviewViewSet,
+    basename='reviews'
+)
+router.register(
+    r"titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments",
+    CommentViewSet,
+    basename='comments'
+)
 
 authentication_urls = [
     path('signup/', signup, name='signup'),
