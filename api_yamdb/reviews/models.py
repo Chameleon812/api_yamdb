@@ -1,14 +1,22 @@
+from datetime import datetime
+import pytz
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MaxValueValidator, MinValueValidator
-from model_utils import Choices
+
+
+class RoleChoices(models.TextChoices):
+    USER = 'user'
+    MODARATOR = 'moderator'
+    ADMIN = 'admin'
 
 
 class User(AbstractUser):
-    ROLE = Choices('user', 'moderator', 'admin')
     role = models.CharField(
         'Пользовательская роль',
-        choices=ROLE, default=ROLE.user, max_length=20
+        choices=RoleChoices.choices, default=RoleChoices.USER, max_length=20
     )
     bio = models.TextField('Биография', blank=True)
     email = models.EmailField('Электронная почта', unique=True)
@@ -46,7 +54,11 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=100)
-    year = models.PositiveSmallIntegerField('Год выпуска')
+    year = models.PositiveSmallIntegerField(
+        'Год выпуска',
+        validators=[MaxValueValidator(pytz.utc.localize(datetime.now()).year,
+                    'Год не может быть больше текущего')]
+    )
     description = models.TextField('Описание', blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
@@ -54,7 +66,7 @@ class Title(models.Model):
         blank=True, null=True
     )
     genre = models.ManyToManyField(
-        Genre, through='Genre_Title', verbose_name='Жанр'
+        Genre, through='GenreTitle', verbose_name='Жанр'
     )
 
     class Meta:
@@ -65,7 +77,7 @@ class Title(models.Model):
         return self.name
 
 
-class Genre_Title(models.Model):
+class GenreTitle(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='title_genre',
         verbose_name='Произведение'
@@ -76,7 +88,7 @@ class Genre_Title(models.Model):
     )
 
     class Meta:
-        unique_together = ['title', 'genre']
+        UniqueConstraint(fields=['title', 'genre'], name='unique_genre')
         verbose_name = 'Отнесение произведения к жанру'
         verbose_name_plural = 'Отнесение произведений к жанрам'
 
@@ -101,8 +113,8 @@ class Review(ParentingModel):
         related_name='reviews'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1),
-                    MaxValueValidator(10)]
+        validators=[MinValueValidator(1, 'Оценка от 1 до 10'),
+                    MaxValueValidator(10, 'Оценка от 1 до 10')]
     )
 
     class Meta:

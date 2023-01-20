@@ -1,8 +1,8 @@
-from django.core.management.base import BaseCommand
 import csv
 
+from django.core.management.base import BaseCommand
 from reviews.models import (Category, Genre, User, Title,
-                            Comment, Genre_Title, Review)
+                            Comment, GenreTitle, Review)
 
 
 class Command(BaseCommand):
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             'Genre': [Genre, 'genre.csv'],
             'User': [User, 'users.csv'],
             'Title': [Title, 'titles.csv'],
-            'Genre_Title': [Genre_Title, 'genre_title.csv'],
+            'Genre_Title': [GenreTitle, 'genre_title.csv'],
             'Review': [Review, 'review.csv'],
             'Comment': [Comment, 'comments.csv']
         }

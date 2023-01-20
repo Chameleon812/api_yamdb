@@ -1,16 +1,18 @@
-import django_filters
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters, mixins, status
+from rest_framework import viewsets, filters, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import permission_classes
 from rest_framework.decorators import action
+from reviews.models import Review, Title, Category, Genre, User, Comment
+from api.permissions import (IsAdminOrReadOnly, IsAdmin,
+                             IsAdminOrModeratorOrAuthor)
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
@@ -18,9 +20,8 @@ from .serializers import (CommentSerializer, ReviewSerializer,
                           TitleSerializer, TitleSafeSerializer,
                           UserSerializer, UserMeSerializer,
                           )
-from reviews.models import Review, Title, Category, Genre, User, Comment
-from api.permissions import (IsAdminOrReadOnly, IsAdmin,
-                             IsAdminOrModeratorOrAuthor)
+from .mixins import ListCreateDeleteViewSet
+from .filters import TitleFilter
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -31,7 +32,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        return Review.objects.filter(title=self.title_query().id)
+        return self.title_query().reviews.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.title_query())
@@ -50,12 +51,6 @@ class CommentViewSet(ReviewViewSet):
         serializer.save(author=self.request.user, review=self.review_query())
 
 
-class ListCreateDeleteViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
-                              mixins.DestroyModelMixin,
-                              viewsets.GenericViewSet):
-    pass
-
-
 class CategoryViewSet(ListCreateDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -72,17 +67,6 @@ class GenreViewSet(ListCreateDeleteViewSet):
     search_fields = ('name',)
     lookup_field = 'slug'
     permission_classes = (IsAdminOrReadOnly,)
-
-
-class TitleFilter(django_filters.FilterSet):
-    category = django_filters.CharFilter(field_name='category__slug',
-                                         lookup_expr='icontains')
-    genre = django_filters.CharFilter(field_name='genre__slug',
-                                      lookup_expr='icontains')
-
-    class Meta:
-        model = Title
-        fields = ['category', 'genre', 'name', 'year']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -175,8 +159,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'PATCH':
             serializer = UserMeSerializer(
                 request.user, data=request.data, partial=True)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 serializer.save(role=request.user.role)
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
