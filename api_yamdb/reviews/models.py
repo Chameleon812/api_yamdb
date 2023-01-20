@@ -9,7 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 class RoleChoices(models.TextChoices):
     USER = 'user'
-    MODARATOR = 'moderator'
+    MODERATOR = 'moderator'
     ADMIN = 'admin'
 
 
@@ -24,6 +24,14 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ['username']
+
+    @property
+    def is_admin(self):
+        return self.role == RoleChoices.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == RoleChoices.MODERATOR
 
 
 class Category(models.Model):
