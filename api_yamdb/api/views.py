@@ -1,27 +1,24 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.decorators import permission_classes
-from rest_framework.decorators import action
-from reviews.models import Review, Title, Category, Genre, User, Comment
+
 from api.permissions import (IsAdminOrReadOnly, IsAdmin,
                              IsAdminOrModeratorOrAuthor)
-
+from reviews.models import Review, Title, Category, Genre, User, Comment
+from .filters import TitleFilter
+from .mixins import ListCreateDeleteViewSet
 from .serializers import (CommentSerializer, ReviewSerializer,
                           CategorySerializer, GenreSerializer,
                           SignUpSerializer, TokenSerializer,
                           TitleSerializer, TitleSafeSerializer,
-                          UserSerializer, UserMeSerializer,
-                          )
-from .mixins import ListCreateDeleteViewSet
-from .filters import TitleFilter
+                          UserSerializer, UserMeSerializer)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -45,7 +42,7 @@ class CommentViewSet(ReviewViewSet):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        return Comment.objects.filter(review=self.review_query().id)
+        return self.review_query().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.review_query())
@@ -158,7 +155,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
         if request.method == 'PATCH':
             serializer = UserMeSerializer(
-                request.user, data=request.data, partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(role=request.user.role)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                request.user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)

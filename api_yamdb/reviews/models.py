@@ -1,10 +1,7 @@
-from datetime import datetime
-import pytz
-
 from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils import timezone
 
 
 class RoleChoices(models.TextChoices):
@@ -64,7 +61,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=100)
     year = models.PositiveSmallIntegerField(
         'Год выпуска',
-        validators=[MaxValueValidator(pytz.utc.localize(datetime.now()).year,
+        validators=[MaxValueValidator(timezone.now().year,
                     'Год не может быть больше текущего')]
     )
     description = models.TextField('Описание', blank=True)
@@ -96,7 +93,9 @@ class GenreTitle(models.Model):
     )
 
     class Meta:
-        UniqueConstraint(fields=['title', 'genre'], name='unique_genre')
+        constraints = [
+            models.UniqueConstraint(fields=['title', 'genre'], name='unique_genre')
+        ]
         verbose_name = 'Отнесение произведения к жанру'
         verbose_name_plural = 'Отнесение произведений к жанрам'
 

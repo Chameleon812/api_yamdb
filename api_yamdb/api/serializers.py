@@ -1,8 +1,7 @@
-from datetime import datetime
-import pytz
-
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers
+
 from reviews.models import (Review, Comment, Category, User, Genre, Title)
 
 
@@ -65,7 +64,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        exclude = ('id',)
         model = Genre
 
 
@@ -192,7 +191,7 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
-        if value > pytz.utc.localize(datetime.now()).year:
+        if value > timezone.now().year:
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего!')
         return value
