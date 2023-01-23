@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.permissions import (IsAdminOrReadOnly, IsAdmin,
                              IsAdminOrModeratorOrAuthor)
-from reviews.models import Review, Title, Category, Genre, User, Comment
+from reviews.models import Review, Title, Category, Genre, User
 from .filters import TitleFilter
 from .mixins import ListCreateDeleteViewSet
 from .serializers import (CommentSerializer, ReviewSerializer,
