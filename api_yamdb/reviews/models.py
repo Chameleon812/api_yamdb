@@ -1,16 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
-from django.core.exceptions import ValidationError
 
-
-def my_year_validator(value):
-    if value > timezone.now().year:
-        raise ValidationError(
-            ('Этот год еще не наступил!'),
-            params={'value': value},
-        )
+from .validators import year_validator
 
 
 class RoleChoices(models.TextChoices):
@@ -70,7 +62,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=100)
     year = models.PositiveSmallIntegerField(
         'Год выпуска',
-        validators=[my_year_validator]
+        validators=[year_validator]
     )
     description = models.TextField('Описание', blank=True)
     category = models.ForeignKey(
