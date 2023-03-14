@@ -13,11 +13,11 @@ class RoleChoices(models.TextChoices):
 
 class User(AbstractUser):
     role = models.CharField(
-        'Пользовательская роль',
+        'User role',
         choices=RoleChoices.choices, default=RoleChoices.USER, max_length=20
     )
-    bio = models.TextField('Биография', blank=True)
-    email = models.EmailField('Электронная почта', unique=True)
+    bio = models.TextField('Biography', blank=True)
+    email = models.EmailField('Email', unique=True)
     confirmation_code = models.CharField(max_length=120, default='')
 
     class Meta:
@@ -33,12 +33,12 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField('Название', unique=True, max_length=100)
-    slug = models.SlugField('Идентификатор', unique=True)
+    name = models.CharField('Name', unique=True, max_length=100)
+    slug = models.SlugField('Identifier', unique=True)
 
     class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
         ordering = ['name']
 
     def __str__(self):
@@ -46,12 +46,12 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField('Название', unique=True, max_length=100)
-    slug = models.SlugField('Идентификатор', unique=True)
+    name = models.CharField('Name', unique=True, max_length=100)
+    slug = models.SlugField('Identifier', unique=True)
 
     class Meta:
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'Жанры'
+        verbose_name = 'Ganre'
+        verbose_name_plural = 'Ganres'
         ordering = ['name']
 
     def __str__(self):
@@ -59,24 +59,24 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField('Название', max_length=100)
+    name = models.CharField('Name', max_length=100)
     year = models.PositiveSmallIntegerField(
-        'Год выпуска',
+        'Year of issue',
         validators=[year_validator]
     )
-    description = models.TextField('Описание', blank=True)
+    description = models.TextField('Description', blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
-        related_name='titles', verbose_name='Категория',
+        related_name='titles', verbose_name='Category',
         blank=True, null=True
     )
     genre = models.ManyToManyField(
-        Genre, through='GenreTitle', verbose_name='Жанр'
+        Genre, through='GenreTitle', verbose_name='Ganre'
     )
 
     class Meta:
-        verbose_name = 'Произведение'
-        verbose_name_plural = 'Произведения'
+        verbose_name = 'Product'
+        verbose_name_plural = 'Product'
 
     def __str__(self):
         return self.name
@@ -85,11 +85,11 @@ class Title(models.Model):
 class GenreTitle(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='title_genre',
-        verbose_name='Произведение'
+        verbose_name='Product'
     )
     genre = models.ForeignKey(
         Genre, on_delete=models.CASCADE, related_name='genre_title',
-        verbose_name='Жанр'
+        verbose_name='Ganre'
     )
 
     class Meta:
@@ -97,8 +97,8 @@ class GenreTitle(models.Model):
             models.UniqueConstraint(fields=['title', 'genre'],
                                     name='unique_genre')
         ]
-        verbose_name = 'Отнесение произведения к жанру'
-        verbose_name_plural = 'Отнесение произведений к жанрам'
+        verbose_name = 'Assigning a work to a genre'
+        verbose_name_plural = 'Assigning a works to a genres'
 
 
 class ParentingModel(models.Model):
@@ -121,13 +121,13 @@ class Review(ParentingModel):
         related_name='reviews'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1, 'Оценка от 1 до 10'),
-                    MaxValueValidator(10, 'Оценка от 1 до 10')]
+        validators=[MinValueValidator(1, 'Rating from 1 to 10'),
+                    MaxValueValidator(10, 'Rating from 1 to 10')]
     )
 
     class Meta:
         ordering = ['-id']
-        verbose_name = 'Отзывы'
+        verbose_name = 'Reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -146,5 +146,5 @@ class Comment(ParentingModel):
 
     class Meta:
         ordering = ['-id']
-        verbose_name = 'Комментарии'
+        verbose_name = 'Comments'
         ordering = ['id', ]

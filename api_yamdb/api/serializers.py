@@ -18,7 +18,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate_score(self, value):
         if 0 > value > 10:
-            raise serializers.ValidationError('Оценка от 0 до 10!')
+            raise serializers.ValidationError('Rating from 0 to 10!')
         return value
 
     def validate(self, data):
@@ -29,8 +29,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request.method == 'POST' and Review.objects.filter(
             title=title, author=author
         ).exists():
-            raise serializers.ValidationError('Вы уже оставили отзыв'
-                                              'к этому произведению!')
+            raise serializers.ValidationError('You have already left a '
+                                              'review for this product!')
         return data
 
     class Meta:
@@ -109,11 +109,11 @@ class UserSerializer(serializers.ModelSerializer):
 
         if username.lower() == 'me':
             raise serializers.ValidationError(
-                'Недопустимое имя'
+                'Invalid name'
             )
         if unique_test:
             raise serializers.ValidationError(
-                'Имя уже занято'
+                'Name already taken'
             )
         return username
 
@@ -123,7 +123,7 @@ class UserSerializer(serializers.ModelSerializer):
         ).exists()
         if unique_email:
             raise serializers.ValidationError(
-                'Пользователь с таким email уже зарегистрирован'
+                'User with this email is already registered'
             )
         return email
 
@@ -140,17 +140,17 @@ class SignUpSerializer(serializers.ModelSerializer):
 
         if data.get('username').lower() == 'me':
             raise serializers.ValidationError(
-                'username запрещен'
+                'Username is forbidden'
             )
         if User.objects.filter(email=email, username=username).exists():
             return data
         if User.objects.filter(username=data.get('username')):
             raise serializers.ValidationError(
-                'Пользователь с таким username уже существует'
+                'A user with this username already exists'
             )
         if User.objects.filter(email=data.get('email')):
             raise serializers.ValidationError(
-                'Пользователь с таким email уже существует'
+                'User with this email already exists'
             )
         return data
 
@@ -193,5 +193,5 @@ class TitleSerializer(serializers.ModelSerializer):
     def validate_year(self, value):
         if value > timezone.now().year:
             raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего!')
+                'The year of issue cannot be greater than the current one!')
         return value
