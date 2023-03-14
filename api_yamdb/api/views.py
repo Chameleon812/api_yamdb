@@ -101,7 +101,7 @@ def signup(request):
         confirmation_code=confirmation_code
     )
     send_mail(
-        'Регистрация', f'Ваш код подтверждения: {confirmation_code}',
+        'Registration', f'Your confirmation code: {confirmation_code}',
         'admin', [email]
     )
     return Response(
