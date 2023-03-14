@@ -1,47 +1,60 @@
-# Групповой проект студентов Яндекс.Практикум по курсу "API: интерфейс взаимодействия программ"
+# Group project of Yandex.Workshop students on the course "API: program interaction interface"
 
-Проект YaMDb собирает отзывы пользователей на произведения. Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
+The YaMDb project collects user feedback on works. Works are not stored in YaMDb, you can not watch a movie or listen to music here.
+
+## Functionality
+
+- JWT tokens are used for authentication.
+- Unauthenticated users have read-only access to the API.
+- Creation of objects is allowed only for authenticated users.
+- Getting a list of all categories and genres, adding and deleting.
+- Getting a list of all works, adding them. Obtaining, updating and deleting a specific work.
+- Getting a list of all reviews, adding them. Get, update, and delete specific feedback.
+- Getting a list of all comments, adding them. Getting, updating and deleting a specific comment.
+- Ability to get detailed information about yourself and delete your account.
+- Filtering by fields.
+
+### The API documentation is available at [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/) after the server has started
 
 
-## Доступный функционал
-
-- Для аутентификации используются JWT-токены.
-- У неаутентифицированных пользователей доступ к API только на уровне чтения.
-- Создание объектов разрешено только аутентифицированным пользователям.
-- Получение списка всех категорий и жанров, добавление и удаление.
-- Получение списка всех произведений, их добавление. Получение, обновление и удаление конкретного произведения.
-- Получение списка всех отзывов, их добавление. Получение, обновление и удаление конкретного отзыва.  
-- Получение списка всех комментариев, их добавление. Получение, обновление и удаление конкретного комментария.
-- Возможность получения подробной информации о себе и удаления своего аккаунта.
-- Фильтрация по полям.
-
-### Документация к API доступна по адресу [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/) после запуска сервера
-
-
-### Запуск проекта
+### Instructions
  
-- Установите и активируйте виртуальное окружение:  
-``` python -m venv venv ``` 
-- Установите зависимости из файла requirements.txt:   
+- Install and activate the virtual environment:
+``` python -m venv venv ```
+- Install dependencies from requirements.txt file:
 ``` pip install -r requirements.txt ```
-- Примените миграции:   
+- Apply migrations:
 ``` python manage.py migrate ```
 
-### Примеры некоторых запросов API
+### Examples of some API requests
 
-Регистрация пользователя:  
-``` POST /api/v1/auth/signup/ ```  
-Получение данных своей учетной записи:  
-``` GET /api/v1/users/me/ ```  
-Добавление новой категории:  
-``` POST /api/v1/categories/ ```  
-Удаление жанра:  
-``` DELETE /api/v1/genres/{slug} ```  
-Частичное обновление информации о произведении:  
-``` PATCH /api/v1/titles/{titles_id} ```  
-Получение списка всех отзывов:  
-``` GET /api/v1/titles/{title_id}/reviews/ ```   
-Добавление комментария к отзыву:  
-``` POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/ ```    
+User registration:
+```
+    POST /api/v1/auth/signup/ 
+```
+Getting your account information:
+```
+    GET /api/v1/users/me/
+```
+Adding a new category:
+```
+    POST /api/v1/categories/
+```
+Removing a genre:
+```
+    DELETE /api/v1/genres/{slug}
+```
+Partial update of information about the work:
+```
+    PATCH /api/v1/titles/{titles_id}
+```
+Getting a list of all reviews:
+```
+    GET /api/v1/titles/{title_id}/reviews/
+```
+Adding a comment to a review:
+```
+    POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/
+```    
 
-Полный список запросов API находятся в документации
+The full list of API requests are in the documentation
